@@ -1,0 +1,334 @@
+{
+  "name": "Antar's Bookshop - Autonomous Sales Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        0
+      ],
+      "id": "b2147fa0-8677-4dfc-9521-e7418ae3a91e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc",
+          "mode": "list",
+          "cachedResultName": "Antar's Bookshop CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "c98de8db-d257-4123-801a-19416ec74edb",
+      "name": "CRM",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c",
+          "mode": "list",
+          "cachedResultName": "n8n sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Available",
+              "lookupValue": "Yes"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        0
+      ],
+      "id": "18911126-a9ae-4da8-833c-938f03a52a58",
+      "name": "Inventory",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Title ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        784,
+        0
+      ],
+      "id": "0e2ec488-e0df-4c3e-8b79-056925588dd5",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8bdabc1c-0eac-4d1f-a18d-d8011a33df9e",
+              "name": "finalPrompt",
+              "value": "={{ $('Set').item.json.salesPrompt + ' Only suggest books from this inventory: ' + $json['Title '].map(i => i['Title ']).join(', ') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        0
+      ],
+      "id": "aea984ed-c54b-4ecc-85e2-25f27f61c715",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8bdabc1c-0eac-4d1f-a18d-d8011a33df9e",
+              "name": "salesPrompt",
+              "value": "={{ 'Write a short warm re-engagement email to a customer of Antar\\'s Bookshop who has not visited in over 30 days. Their past requests were: ' + $json.requests.join(', ') + '. Suggest one book they might enjoy based on their history. Be personal and warm.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        0
+      ],
+      "id": "8669d434-0635-4eb9-9db4-064076c14e4e",
+      "name": "Set"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a warm and professional customer engagement specialist for Antar's Bookshop in Saida, Lebanon. Write personalized re-engagement emails that feel genuine, not automated.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.finalPrompt }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1152,
+        0
+      ],
+      "id": "2452325b-c72d-456b-8ea0-9ec97c01db6d",
+      "name": "Groq"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code').item.json.email }}",
+        "subject": "We miss you at Antar's Bookshop",
+        "message": "={{ $json.choices[0].message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "a1afa459-e58b-4440-a4ab-bc28150ecce9",
+      "name": "Send a message",
+      "webhookId": "93b0f456-c445-482b-99cc-5791cb49f63d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zarqg2h1A8Slu890",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst customers = {};\nconst thirtyDaysAgo = Date.now() - 1 * 24 * 60 * 60 * 1000;\n\nfor (const item of items) {\n  const email = item.json['Customer Email'];\n  const timestamp = new Date(item.json['Timestamp']).getTime();\n  const request = item.json['Customer Request'];\n\n  if (!customers[email]) {\n    customers[email] = { email, lastSeen: timestamp, requests: [] };\n  }\n  if (timestamp > customers[email].lastSeen) {\n    customers[email].lastSeen = timestamp;\n  }\n  customers[email].requests.push(request);\n}\n\nconst inactive = Object.values(customers)\n  .filter(c => c.lastSeen <= thirtyDaysAgo);\n\nreturn inactive.map(c => ({ json: c }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        0
+      ],
+      "id": "2ca25281-5fee-4c0a-b8db-f922bcdc943e",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventory": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8683eec3-90b1-4b18-abdd-8115d0b9c576",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f23edad2fb416e0171811e3dafea4aaf5642c093cadb713e10f635f0c6bcbbb1"
+  },
+  "nodeGroups": [],
+  "id": "uXUWoW8rrIe6zyWU",
+  "tags": []
+}

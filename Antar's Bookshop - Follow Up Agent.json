@@ -1,0 +1,557 @@
+{
+  "name": "Antar's Bookshop - Follow Up Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1769cd60-ddb7-43df-b39e-60fb79977fcc",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc",
+          "mode": "list",
+          "cachedResultName": "Antar's Bookshop CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "8a21b87f-3d06-4b18-b095-546b911640a7",
+      "name": "CRM",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a90c6e7b-ce6a-4bdb-aefa-97ced99cd182",
+              "name": "followUpPrompt",
+              "value": "={{ ('Write a short warm follow-up email to a customer of Antar\\'s Bookshop who 3 days ago requested: ' + $('CRM').item.json['Customer Request']).replace(/\\n/g, ' ').replace(/\"/g, \"'\") }}",
+              "type": "string"
+            },
+            {
+              "id": "5651e7d5-669e-4560-850f-d3a518f9d193",
+              "name": "inventory",
+              "value": "={{ $json['Title '].map(item => item['Title ']).join(', ') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        0
+      ],
+      "id": "2290cef5-6809-48d1-8cab-7191ac43841a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a warm and professional customer service representative for Antar's Bookshop in Saida, Lebanon. You are writing a follow-up email to a customer who contacted the shop 3 days ago. You ONLY suggest books from the provided inventory. Never recommend books not in the inventory.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.followUpPrompt }}\\n\\nAvailable inventory: {{ $json.inventory }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2016,
+        0
+      ],
+      "id": "d82b8222-0757-4290-9687-04ce26dcad0c",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('CRM').item.json['Customer Email'] }}",
+        "subject": "Following up on your book request - Antar's Bookshop",
+        "message": "={{ $json.choices[0].message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2240,
+        0
+      ],
+      "id": "0aaf8cb4-e9a0-4b0a-8531-fca8977c8689",
+      "name": "Send a message",
+      "webhookId": "27474fd8-e812-47a4-bdd6-8d50ae13ce29",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zarqg2h1A8Slu890",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c",
+          "mode": "list",
+          "cachedResultName": "n8n sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "2d8797fc-a00d-407a-a539-6408b593fcc5",
+      "name": "Inventory Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0f612aa-3e14-434c-97aa-3edc3196723b",
+              "leftValue": "={{ $json['Available'] }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "94f977d5-48f0-4e50-af2e-21d57cfa2c38",
+      "name": "Filter Available"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Title ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        0
+      ],
+      "id": "4f233967-1cb8-4efd-a39d-d69801cce99a",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "Customer Email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "eb9336bb-8cf0-41b1-85a2-a41ec0226f6e",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst seen = new Set();\nconst unique = [];\n\nfor (const item of items) {\n  const email = item.json['Customer Email'];\n  if (!seen.has(email)) {\n    seen.add(email);\n    unique.push({ json: item.json });\n  }\n}\n\nreturn unique;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "e09cbc56-c25a-45e8-99b5-05a37732708e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc",
+          "mode": "list",
+          "cachedResultName": "Antar's Bookshop CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Follow Up Sent": "Yes",
+            "row_number": "={{ $('CRM').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent",
+              "displayName": "Intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Request",
+              "displayName": "Customer Request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Response",
+              "displayName": "AI Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Follow Up Sent",
+              "displayName": "Follow Up Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2464,
+        0
+      ],
+      "id": "6b1c1110-b09a-473b-a748-04359be6f78a",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ffdbd84d-dec8-4921-a6c9-1c093b1ad562",
+              "leftValue": "={{ $json.Intent }}",
+              "rightValue": "BOOK_REQUEST",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "fc929092-c31e-4e3f-b5d8-dd2eda3208a5",
+              "leftValue": "={{ new Date($json.Timestamp).getTime() }}",
+              "rightValue": "={{ new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).getTime() }}",
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            },
+            {
+              "id": "2ff0cf60-4dbe-41ac-89ab-ff9751504084",
+              "leftValue": "={{ $json['Follow Up Sent'] }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "04ce24b2-9fdf-4637-a138-cb03bd241790",
+      "name": "CRM Filter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM": {
+      "main": [
+        [
+          {
+            "node": "CRM Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventory Sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter Available",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Available": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Inventory Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Filter": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3e306318-6d4d-4d25-88bf-5d6c140a85ed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f23edad2fb416e0171811e3dafea4aaf5642c093cadb713e10f635f0c6bcbbb1"
+  },
+  "nodeGroups": [],
+  "id": "ChUVyrD6Q4JNecY5",
+  "tags": []
+}

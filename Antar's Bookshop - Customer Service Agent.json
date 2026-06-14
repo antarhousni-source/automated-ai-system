@@ -1,0 +1,896 @@
+{
+  "name": "Antar's Bookshop - Customer Service Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -192
+      ],
+      "id": "18d10345-0d9e-431b-a064-06373243e6c7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a book assistant for Antar's Bookshop in Saida, Lebanon. You ONLY recommend books from the inventory provided. If no exact match exists, suggest the closest available alternative. Be warm and professional.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Customer request: {{ $json.customerRequest }}\\n\\nInventory: {{ $json.inventory }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1904,
+        -96
+      ],
+      "id": "502da780-0f1a-4d38-9128-c066732e9af2",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "filters": {
+          "sender": "antarhousni@gmail.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        -192
+      ],
+      "id": "eb1f2fbb-c132-42ff-9994-0c7a4b0b02dd",
+      "name": "Get many messages",
+      "webhookId": "7b3b0367-c59a-4ef7-93ec-a7834d0a9e48",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zarqg2h1A8Slu890",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c",
+          "mode": "list",
+          "cachedResultName": "n8n sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wgJ_xZNszDxTHoZAqQFTXhgroCUMETxlV2Ua3trnq-c/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1008,
+        -192
+      ],
+      "id": "05fd2d07-fe5b-444e-8b61-6c86c5a245c8",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dcae2c5b-0504-4753-a737-52479257b458",
+              "name": "customerRequest",
+              "value": "={{ $('Get many messages').item.json.snippet }}",
+              "type": "string"
+            },
+            {
+              "id": "97becb25-d249-4867-9728-c3c091ffeab2",
+              "name": "inventory",
+              "value": "={{ $json['Title '].map(item => item['Title ']).join(', ') }}",
+              "type": "string"
+            },
+            {
+              "id": "0d52a82b-fadf-46aa-8802-1d8bb651a856",
+              "name": "intent",
+              "value": "={{ $('Intent Detector').item.json.choices[0].message.content.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1680,
+        -96
+      ],
+      "id": "f197e6a9-94fa-4e57-b737-44227933adeb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "Title ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        -96
+      ],
+      "id": "6d54442c-84ac-483f-83a7-afc0ad02b942",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Get many messages').item.json.From.replace(/.*<(.+)>/, '$1') }}",
+        "subject": "Re: Book Request",
+        "message": "={{ $('Google Sheets Log').item.json['AI Response'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2576,
+        -96
+      ],
+      "id": "adfbf66d-138d-42c3-8f6d-b49095e97331",
+      "name": "Send a message",
+      "webhookId": "6491f0fd-585a-4010-b17d-5bddeba36073",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zarqg2h1A8Slu890",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an intent classifier for a bookshop. Classify the customer email into exactly one of these three categories:\\n- BOOK_REQUEST: customer is looking for a book, asking about a title, genre, or author\\n- COMPLAINT: customer is unhappy, reporting an issue, or expressing dissatisfaction\\n- GENERAL_INQUIRY: customer is asking about store hours, location, pricing, or anything else\\nReply with only the category name, nothing else. No punctuation, no explanation.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Get many messages').item.json.snippet }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        336,
+        -192
+      ],
+      "id": "49cf9aa0-0edc-4bab-bfa0-44e5e5044e85",
+      "name": "Intent Detector"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Store Intent').item.json.intent }}",
+                    "rightValue": "BOOK_REQUEST",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3ecbcbb8-831b-482a-bc72-5432363f87aa"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "37cc5127-bd94-4f78-9b48-bd3e4da37abf",
+                    "leftValue": "={{ $('Store Intent').item.json.intent }}",
+                    "rightValue": "COMPLAINT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "01583da5-efb3-4c9a-acac-7ebbbc62b75b",
+                    "leftValue": "={{ $('Store Intent').item.json.intent }}",
+                    "rightValue": "GENERAL_INQUIRY",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        -208
+      ],
+      "id": "81ae0741-a158-4f2f-a2e1-0ad9012cca3f",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a customer service representative for Antar's Bookshop in Saida, Lebanon. A customer has sent a complaint. Respond with empathy, acknowledge their concern, apologize sincerely, and assure them it will be resolved. Be warm, professional, and concise.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Get many messages').item.json.snippet }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1904,
+        96
+      ],
+      "id": "3e807f1c-68e1-4e27-a094-1ce95295fa1f",
+      "name": "Complaint Responder"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful assistant for Antar's Bookshop in Saida, Lebanon. The bookshop is located in the heart of Saida, open Monday to Saturday 9am to 7pm. We specialize in Arabic, English and French literature. Respond to the customer's inquiry warmly and professionally. If you don't know the answer, invite them to call or visit the shop.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Get many messages').item.json.snippet }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1904,
+        -480
+      ],
+      "id": "488e0cec-44a6-48f0-9a95-fa1d5e521c5d",
+      "name": "General Responder"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2128,
+        -112
+      ],
+      "id": "4f376960-87fc-4e38-85d1-70e17b6cfd1f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2eb21cde-881b-4ca7-a83f-4b5a8835eb52",
+              "name": "intent",
+              "value": "={{ $json.choices[0].message.content.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        -192
+      ],
+      "id": "e1873111-d1f4-4d89-b4b4-577ddd9ffa61",
+      "name": "Store Intent"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc",
+          "mode": "list",
+          "cachedResultName": "Antar's Bookshop CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ new Date().toISOString() }}",
+            "Customer Email": "={{ $('Get many messages').item.json.From.replace(/.*<(.+)>/, '$1') }}",
+            "Intent": "={{ $('Store Intent').item.json.intent }}",
+            "Customer Request": "={{ $('Get many messages').item.json.snippet }}",
+            "AI Response": "={{ $json.choices[0].message.content }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Intent",
+              "displayName": "Intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Request",
+              "displayName": "Customer Request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Response",
+              "displayName": "AI Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2352,
+        -96
+      ],
+      "id": "d0c2ce2b-a808-45bd-b552-af27d9ab9000",
+      "name": "Google Sheets Log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4f5c0752-b27b-4a43-8847-0eb9adff33cc",
+              "leftValue": "={{ $json['Available'] }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        -96
+      ],
+      "id": "734face2-2ccb-4644-a781-372637215f34",
+      "name": "Filter Yes",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3011aca5-34a4-4dfd-9d55-ce268511c4c0",
+              "leftValue": "={{ $json['Available'] }}",
+              "rightValue": "No",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        -288
+      ],
+      "id": "2b2f1035-70fc-4572-9e0a-edd253d1710c",
+      "name": "Filter No"
+    },
+    {
+      "parameters": {
+        "sendTo": "antarhousni@gmail.com",
+        "subject": "Restock Alert - Antar's Bookshop",
+        "message": "={{ 'Restock Alert!\\n\\nA customer has requested books that are currently unavailable.\\n\\nCustomer Email: ' + $('Get many messages').item.json.From.replace(/.*<(.+)>/, '$1') + '\\n\\nCustomer Request: ' + $('Get many messages').item.json.snippet + '\\n\\nUnavailable Books: ' + $('Code').item.json.unavailableBooks }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        -288
+      ],
+      "id": "a01667be-c102-49ca-9b5c-b773f8c87860",
+      "name": "Send a message1",
+      "webhookId": "b15554fd-fb92-4290-aeb5-847a996ef618",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zarqg2h1A8Slu890",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1h2yV-osbNhPUgfgzs4U-1CokbEijEBrNz_gDICf0yso",
+          "mode": "list",
+          "cachedResultName": "Antar's Bookshop Restock Demand Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h2yV-osbNhPUgfgzs4U-1CokbEijEBrNz_gDICf0yso/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h2yV-osbNhPUgfgzs4U-1CokbEijEBrNz_gDICf0yso/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ new Date().toISOString() }}",
+            "Customer Email": "={{ $('Get many messages').item.json.From.replace(/.*<(.+)>/, '$1') }}",
+            "Requested Book Topic": "={{ $('Get many messages').item.json.snippet }}",
+            "Times Requested": "1"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Email",
+              "displayName": "Customer Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Requested Book Topic",
+              "displayName": "Requested Book Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Times Requested",
+              "displayName": "Times Requested",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1680,
+        -288
+      ],
+      "id": "81ffa249-3147-4366-8edd-9f61262b722d",
+      "name": "Restock Alert",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst books = items.map(item => item.json['Title ']).filter(b => b).join(', ');\nreturn [{ json: { unavailableBooks: books } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        -288
+      ],
+      "id": "68db5ce9-a6de-4be8-bb5d-e92e90fbbf79",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Intent Detector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Filter No",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Yes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Detector": {
+      "main": [
+        [
+          {
+            "node": "Store Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Complaint Responder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Complaint Responder": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "General Responder": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Intent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Log": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Yes": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter No": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restock Alert": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Restock Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9a54db75-3b65-447b-b07d-509e33c40f13",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f23edad2fb416e0171811e3dafea4aaf5642c093cadb713e10f635f0c6bcbbb1"
+  },
+  "nodeGroups": [],
+  "id": "Kdc8Z47fV92Sa3WR",
+  "tags": []
+}

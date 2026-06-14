@@ -1,0 +1,380 @@
+{
+  "name": "Antar's Bookshop - Weekly Report Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc",
+          "mode": "list",
+          "cachedResultName": "Antar's Bookshop CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1t4ofiHtOxMxp3XCt56Naf-8VnscUpJQQ5M3MPSF-8uc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -400,
+        -48
+      ],
+      "id": "a044a907-669b-4445-8eab-cf20eba9ccea",
+      "name": "CRM",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "antarhousni@gmail.com",
+        "subject": "Weekly Performance Report - Antar's Bookshop",
+        "message": "={{ $json.choices[0].message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        -48
+      ],
+      "id": "e73a7413-b2d2-4def-a83f-1042eaaee186",
+      "name": "Send a message",
+      "webhookId": "6cfe47b9-29b9-491a-87c4-3556f15be9d1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zarqg2h1A8Slu890",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "666b363c-ea88-41f8-ad49-ba7121a41ca9",
+              "leftValue": "={{ new Date($json.Timestamp).getTime() }}",
+              "rightValue": "={{ new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).getTime() }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        -48
+      ],
+      "id": "9a39eb70-e2d4-4de2-998e-f7226e349842",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a business analyst for Antar's Bookshop in Saida, Lebanon. Write a concise, professional weekly performance report email to the owner based on the data provided. Keep it warm, clear and actionable.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Weekly data: Total interactions: {{ $json.totalInteractions }}, Book requests: {{ $json.bookRequests }}, Complaints: {{ $json.complaints }}, General inquiries: {{ $json.generalInquiries }}, Most requested topic: {{ $json.topRequest }} ({{ $json.topRequestCount }} times). Generate a weekly report email.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        272,
+        -48
+      ],
+      "id": "39cedced-79c2-4732-8454-6c8c4694ea95",
+      "name": "Groq"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-Sn-am1lolomvy8d_-Rxb4NYFnw87WGxPI5X_cym4a4",
+          "mode": "list",
+          "cachedResultName": " Antar's Bookshop Reports",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-Sn-am1lolomvy8d_-Rxb4NYFnw87WGxPI5X_cym4a4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-Sn-am1lolomvy8d_-Rxb4NYFnw87WGxPI5X_cym4a4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ new Date().toISOString() }}",
+            "Total Interactions": "={{ $('Code').item.json.totalInteractions }}",
+            "Book Requests": "={{ $('Code').item.json.bookRequests }}",
+            "Complaints": "={{ $('Code').item.json.complaints }}",
+            "General Inquiries": "={{ $('Code').item.json.generalInquiries }}",
+            "Top Request": "={{ $('Code').item.json.topRequest }}",
+            "Report": "={{ $('Groq').item.json.choices[0].message.content }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Interactions",
+              "displayName": "Total Interactions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Book Requests",
+              "displayName": "Book Requests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Complaints",
+              "displayName": "Complaints",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "General Inquiries",
+              "displayName": "General Inquiries",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Top Request",
+              "displayName": "Top Request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Report",
+              "displayName": "Report",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        720,
+        -48
+      ],
+      "id": "678a1348-a922-4c70-8521-0ccb43ce797a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kSihDxAMAu0tY8vH",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst total = items.length;\nconst intents = { BOOK_REQUEST: 0, COMPLAINT: 0, GENERAL_INQUIRY: 0 };\nconst topics = {};\n\nfor (const item of items) {\n  const intent = item.json['Intent'];\n  if (intents[intent] !== undefined) intents[intent]++;\n  \n  const request = item.json['Customer Request'];\n  if (request) {\n    topics[request] = (topics[request] || 0) + 1;\n  }\n}\n\nconst topTopic = Object.entries(topics).sort((a,b) => b[1]-a[1])[0];\n\nreturn [{\n  json: {\n    totalInteractions: total,\n    bookRequests: intents.BOOK_REQUEST,\n    complaints: intents.COMPLAINT,\n    generalInquiries: intents.GENERAL_INQUIRY,\n    topRequest: topTopic ? topTopic[0] : 'N/A',\n    topRequestCount: topTopic ? topTopic[1] : 0\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -48
+      ],
+      "id": "9b512cf3-247b-4cc1-96db-07ef25984a45",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "source": "parameter",
+        "workflowJson": "{\n  \"input\": \"string\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -624,
+        48
+      ],
+      "id": "97aaa15e-5f11-4392-bf49-3a96eae7e0c3",
+      "name": "Call 'Antar's Bookshop - Orchestrator'"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -624,
+        -144
+      ],
+      "id": "4330211e-6ab3-4f5e-a042-6ae97910d8bd",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "CRM": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Antar's Bookshop - Orchestrator'": {
+      "main": [
+        [
+          {
+            "node": "CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f17b4e83-17d9-4e08-b42e-1a1c33fc0d14",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f23edad2fb416e0171811e3dafea4aaf5642c093cadb713e10f635f0c6bcbbb1"
+  },
+  "nodeGroups": [],
+  "id": "ZmGBCI4ht0le2ZnF",
+  "tags": []
+}

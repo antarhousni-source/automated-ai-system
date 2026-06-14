@@ -1,0 +1,381 @@
+{
+  "name": "Antar's Bookshop - Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "orchestrator",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        -48
+      ],
+      "id": "6d7624e2-c822-422a-93cc-331ea0e9e9ab",
+      "name": "Webhook",
+      "webhookId": "9fe461a5-74c0-412a-9d1d-7a2917da1674"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "You are the orchestrator for Antar's Bookshop. You have these tools available. When asked to generate a weekly report, call Weekly_Report_Agent immediately with no hesitation. When asked about follow ups, call Follow_Up_Agent. Always call the tool directly — never explain why you can't. Just call it.",
+          "maxIterations": 20
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        304,
+        -48
+      ],
+      "id": "4a570881-0fe8-493e-8709-1a3dba5f0888",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "=qwen/qwen3-32b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        176
+      ],
+      "id": "15f61ae2-3fae-44ce-a95d-8fa49e6eee0d",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "LwQ1Qe5HBJlRMdGo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "orchestrator",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        112,
+        176
+      ],
+      "id": "4f42e1b1-0360-4112-8ed1-d086dbd43499",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "description": "Re-engage inactive customers with personalized emails",
+        "workflowId": {
+          "__rl": true,
+          "value": "uXUWoW8rrIe6zyWU",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/uXUWoW8rrIe6zyWU"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        176
+      ],
+      "id": "f32818fb-1807-42a3-96fa-60fcf23ec8df",
+      "name": "Autonomous Sales Agent"
+    },
+    {
+      "parameters": {
+        "description": "Analyze customer satisfaction and sentiment trends",
+        "workflowId": {
+          "__rl": true,
+          "value": "xLNra2vMVJowRRyP",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/xLNra2vMVJowRRyP"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        176
+      ],
+      "id": "fd7d1a3b-bf7e-4ed8-89b6-f09b830ee21e",
+      "name": "Sentiment Analysis Agent"
+    },
+    {
+      "parameters": {
+        "description": "Contact suppliers for high-demand unavailable books",
+        "workflowId": {
+          "__rl": true,
+          "value": "PoL0B3a2rHa77jWl",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/PoL0B3a2rHa77jWl"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        176
+      ],
+      "id": "2cadf912-69f7-4acd-b507-9743e764d4e2",
+      "name": "Supplier Outreach Agent"
+    },
+    {
+      "parameters": {
+        "description": "Generate and send weekly performance report",
+        "workflowId": {
+          "__rl": true,
+          "value": "ZmGBCI4ht0le2ZnF",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ZmGBCI4ht0le2ZnF",
+          "cachedResultName": "Antar's Bookshop - Weekly Report Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        176
+      ],
+      "id": "24a9a4e8-0c4c-41fb-9925-67f2d4764e9d",
+      "name": "Weekly Report Agent"
+    },
+    {
+      "parameters": {
+        "description": "Follow up with customers who made requests 3+ days ago",
+        "workflowId": {
+          "__rl": true,
+          "value": "ChUVyrD6Q4JNecY5",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/ChUVyrD6Q4JNecY5"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        176
+      ],
+      "id": "2c32d824-f61b-4a25-9e23-7c4c285260c0",
+      "name": "Follow Up Agent"
+    },
+    {
+      "parameters": {
+        "description": "Handle all incoming customer interactions — detects intent, checks inventory, and sends appropriate responses for book requests, complaints, and general inquiries about Antar's Bookshop",
+        "workflowId": {
+          "__rl": true,
+          "value": "Kdc8Z47fV92Sa3WR",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/Kdc8Z47fV92Sa3WR"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        176
+      ],
+      "id": "56a02c75-e0a8-4271-8164-fe055cde000e",
+      "name": "Customer Support Agent"
+    },
+    {
+      "parameters": {
+        "url": "https://api.groq.com/openai/v1/models",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        -80
+      ],
+      "id": "01d0ab10-eecc-4c06-86a6-dbb6770cb135",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Autonomous Sales Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supplier Outreach Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Report Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Follow Up Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Support Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cffc12e6-581e-428a-8532-020dec6c59a1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f23edad2fb416e0171811e3dafea4aaf5642c093cadb713e10f635f0c6bcbbb1"
+  },
+  "nodeGroups": [],
+  "id": "rdM7pHOGYZ20aU6S",
+  "tags": []
+}
