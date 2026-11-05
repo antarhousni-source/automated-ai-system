@@ -219,3 +219,15 @@ AI Systems Design & Agent Orchestration
 ---
 
 *Built in Saida, Lebanon — 2026*
+
+---
+
+## Setting up the Groq key
+
+The workflows no longer contain an API key. Each Groq call reads it from an n8n environment variable named `GROQ_API_KEY`.
+
+1. Create a key in the Groq console.
+2. Set `GROQ_API_KEY` in the environment n8n runs in (for Docker, add it to the container's environment; for n8n Cloud, add it under Variables).
+3. Import the workflow files and run them as before.
+
+Never paste a key into a workflow file or commit it to this repository.

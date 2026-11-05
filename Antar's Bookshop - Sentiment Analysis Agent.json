@@ -100,7 +100,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer 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"
+              "value": "=Bearer {{ $env.GROQ_API_KEY }}"
             }
           ]
         },
